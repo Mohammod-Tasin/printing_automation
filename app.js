@@ -336,7 +336,8 @@ async function processPayment(gateway) {
         name: item.file.name,
         from,
         to,
-        detectedPages: item.pageCount || 1
+        detectedPages: item.pageCount || 1,
+        isImage: item.isImage
       };
     });
     selectedFiles.forEach(item => {
