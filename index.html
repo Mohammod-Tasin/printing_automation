@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Printing Automation</title>
+    <title>Automatic Printing Project</title>
     <style>
-        /* (Just some basic styling) */
         body { font-family: sans-serif; display: grid; place-items: center; min-height: 200px; background-color: #f4f4f4; }
         div { background: #fff; padding: 2rem; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         input, button { font-size: 1rem; margin-top: 0.5rem; }
@@ -31,18 +30,14 @@
         const fileInput = document.getElementById('fileInput');
         const messageDiv = document.getElementById('message');
 
-        // --- মূল পরিবর্তন এখানে ---
-        // আমরা এখন একটি রিলেটিভ পাথ ('/upload') ব্যবহার করছি,
-        // কারণ ওয়েবসাইটটি এখন সার্ভার থেকেই লোড হচ্ছে।
-        const SERVER_UPLOAD_URL = '/upload';
+        // --- আপনার নতুন ngrok লিংক (শেষে /upload সহ) ---
+        const SERVER_UPLOAD_URL = 'https://jace-nonpuristic-carter.ngrok-free.dev/upload';
+        // --- --- --- --- --- --- --- --- --- --- ---
 
-        // যখনই "Upload" বাটনে ক্লিক করা হবে, এই কোডটি রান হবে
         uploadForm.addEventListener('submit', async (event) => {
 
-            // ১. ফর্মটি সাবমিট হলে পেজ রিলোড হওয়া থেকে আটকানো
             event.preventDefault();
 
-            // ২. ইউজার যে ফাইলটি সিলেক্ট করেছে, সেটি নেওয়া
             const file = fileInput.files[0];
             if (!file) {
                 messageDiv.textContent = 'Please select a file first.';
@@ -50,15 +45,14 @@
                 return;
             }
 
-            // ৩. ফাইলটিকে FormData অবজেক্টে প্যাক করা
             const formData = new FormData();
-            formData.append('file', file); // 'file' নামটি server.py -এর নামের সাথে মিলতে হবে
+            formData.append('file', file);
 
             messageDiv.textContent = 'Uploading...';
             messageDiv.style.color = 'blue';
 
             try {
-                // ৪. JavaScript-এর 'fetch' দিয়ে সার্ভারের /upload ঠিকানায় ফাইলটি পাঠানো
+                // সার্ভারের ngrok ঠিকানায় ফাইল পাঠানো হচ্ছে
                 const response = await fetch(SERVER_UPLOAD_URL, {
                     method: 'POST',
                     body: formData
@@ -66,11 +60,11 @@
 
                 const result = await response.json();
 
-                // ৫. সার্ভার থেকে আসা উত্তর দেখানো
                 if (response.ok) {
                     messageDiv.textContent = 'Success: ' + result.message;
                     messageDiv.style.color = 'green';
                 } else {
+                    // --- এই লাইনটি ঠিক করা হয়েছে ---
                     messageDiv.textContent = 'Error: ' + result.error;
                     messageDiv.style.color = 'red';
                 }
