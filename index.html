@@ -1,80 +1,95 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
+  <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Printing Automation</title>
-    <style>
-        body { font-family: sans-serif; display: grid; place-items: center; min-height: 200px; background-color: #f4f4f4; }
-        div { background: #fff; padding: 2rem; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        input, button { font-size: 1rem; margin-top: 0.5rem; }
-        #message { margin-top: 1rem; font-weight: bold; }
-    </style>
-</head>
-<body>
-
-    <div>
-        <h2>Upload Your Document for Printing</h2>
-
+    <title>PrintHub - Automatic Document Printing</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>📠 PrintHub</h1>
+        <p>Automatic Document Printing System</p>
+      </div>
+      <div class="content">
         <form id="uploadForm">
-            <input type="file" id="fileInput" required>
-            <br>
-            <button type="submit">Upload and Print</button>
+          <label for="fileInput" class="file-input-label" id="fileInputLabel"> 📄 Click to upload or drag and drop </label>
+          <input type="file" id="fileInput" multiple required accept=".pdf,.doc,.docx,.txt,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png">
+          <div class="files-list" id="filesList"></div>
+          <div class="options-section">
+            <div class="option-group">
+              <label>Print Type:</label>
+              <div class="radio-group">
+                <label>
+                  <input type="radio" name="colorType" value="bw" checked>
+                  <span class="radio-body">
+                    <span class="radio-title">Black & White</span>
+                    <span class="price-tag">(2 Taka/page)</span>
+                  </span>
+                </label>
+                <label>
+                  <input type="radio" name="colorType" value="color">
+                  <span class="radio-body">
+                    <span class="radio-title">Color</span>
+                    <span class="price-tag">(3 Taka/page)</span>
+                  </span>
+                </label>
+              </div>
+            </div>
+            <!-- Global page range removed — use per-file ranges above each file -->
+          </div>
+          <div class="cost-display" id="costDisplay"> Total Cost: <span id="totalCost">0</span> Taka </div>
+          <div class="button-group">
+            <button type="submit" id="submitBtn">🚀 Upload & Print</button>
+            <button type="button" id="clearBtn">✕ Clear All</button>
+          </div>
         </form>
-
+        <div class="payment-section" id="paymentSection">
+          <div class="payment-header">💳 Payment Summary</div>
+          <div class="payment-details">
+            <div class="detail-row">
+              <span class="detail-label">📁 Files:</span>
+              <span class="detail-value" id="paymentFiles">0</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">🎨 Print Type:</span>
+              <span class="detail-value" id="paymentType">Black & White</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">📄 Total Pages:</span>
+              <span class="detail-value" id="paymentPages">0</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">💰 Total Amount:</span>
+              <span class="detail-value" id="paymentAmount">0 Taka</span>
+            </div>
+          </div>
+          <div class="payment-methods">
+            <button class="payment-btn" id="stripeBtn" type="button">💳 Stripe</button>
+            <button class="payment-btn" id="bkashBtn" type="button">🏦 bKash</button>
+            <button class="payment-btn" id="nagadBtn" type="button">📱 Nagad</button>
+          </div>
+        </div>
+        <div class="loading" id="loading">
+          <div class="spinner"></div>
+          <p>Processing your order...</p>
+        </div>
         <div id="message"></div>
+
+        <!-- Confirmation modal (inserted here so scripts can query it reliably) -->
+        <div id="confirmModal" class="modal" role="dialog" aria-modal="true" aria-hidden="true">
+          <div class="modal-content">
+            <p id="confirmMessage">Are you sure you want to proceed with payment?</p>
+            <div class="modal-actions">
+              <button type="button" id="confirmCancel">Cancel</button>
+              <button type="button" id="confirmOk" class="ok">OK</button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
-
-    <script>
-        const uploadForm = document.getElementById('uploadForm');
-        const fileInput = document.getElementById('fileInput');
-        const messageDiv = document.getElementById('message');
-
-        // --- আপনার নতুন ngrok লিংক (শেষে /upload সহ) ---
-        const SERVER_UPLOAD_URL = 'https://jace-nonpuristic-carter.ngrok-free.dev/upload';
-        // --- --- --- --- --- --- --- --- --- --- ---
-
-        uploadForm.addEventListener('submit', async (event) => {
-
-            event.preventDefault();
-
-            const file = fileInput.files[0];
-            if (!file) {
-                messageDiv.textContent = 'Please select a file first.';
-                messageDiv.style.color = 'red';
-                return;
-            }
-
-            const formData = new FormData();
-            formData.append('file', file);
-
-            messageDiv.textContent = 'Uploading...';
-            messageDiv.style.color = 'blue';
-
-            try {
-                // সার্ভারের ngrok ঠিকানায় ফাইল পাঠানো হচ্ছে
-                const response = await fetch(SERVER_UPLOAD_URL, {
-                    method: 'POST',
-                    body: formData
-                });
-
-                const result = await response.json();
-
-                if (response.ok) {
-                    messageDiv.textContent = 'Success: ' + result.message;
-                    messageDiv.style.color = 'green';
-                } else {
-                    // --- এই লাইনটি ঠিক করা হয়েছে ---
-                    messageDiv.textContent = 'Error: ' + result.error;
-                    messageDiv.style.color = 'red';
-                }
-
-            } catch (error) {
-                console.error('Error:', error);
-                messageDiv.textContent = 'Error: Could not connect to server.';
-                messageDiv.style.color = 'red';
-            }
-        });
-    </script>
-</body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <script src="app.js" defer></script>
+  </body>
 </html>
