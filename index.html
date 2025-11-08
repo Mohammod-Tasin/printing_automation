@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Automatic Printing Project</title>
+    <style>
+        /* (Just some basic styling) */
+        body { font-family: sans-serif; display: grid; place-items: center; min-height: 200px; background-color: #f4f4f4; }
+        div { background: #fff; padding: 2rem; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        input, button { font-size: 1rem; margin-top: 0.5rem; }
+        #message { margin-top: 1rem; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div>
+        <h2>Upload Your Document for Printing</h2>
+
+        <form id="uploadForm">
+            <input type="file" id="fileInput" required>
+            <br>
+            <button type="submit">Upload and Print</button>
+        </form>
+
+        <div id="message"></div>
+    </div>
+
+    <script>
+        const uploadForm = document.getElementById('uploadForm');
+        const fileInput = document.getElementById('fileInput');
+        const messageDiv = document.getElementById('message');
+
+        // --- মূল পরিবর্তন এখানে ---
+        // আমরা এখন একটি রিলেটিভ পাথ ('/upload') ব্যবহার করছি,
+        // কারণ ওয়েবসাইটটি এখন সার্ভার থেকেই লোড হচ্ছে।
+        const SERVER_UPLOAD_URL = '/upload';
+
+        // যখনই "Upload" বাটনে ক্লিক করা হবে, এই কোডটি রান হবে
+        uploadForm.addEventListener('submit', async (event) => {
+
+            // ১. ফর্মটি সাবমিট হলে পেজ রিলোড হওয়া থেকে আটকানো
+            event.preventDefault();
+
+            // ২. ইউজার যে ফাইলটি সিলেক্ট করেছে, সেটি নেওয়া
+            const file = fileInput.files[0];
+            if (!file) {
+                messageDiv.textContent = 'Please select a file first.';
+                messageDiv.style.color = 'red';
+                return;
+            }
+
+            // ৩. ফাইলটিকে FormData অবজেক্টে প্যাক করা
+            const formData = new FormData();
+            formData.append('file', file); // 'file' নামটি server.py -এর নামের সাথে মিলতে হবে
+
+            messageDiv.textContent = 'Uploading...';
+            messageDiv.style.color = 'blue';
+
+            try {
+                // ৪. JavaScript-এর 'fetch' দিয়ে সার্ভারের /upload ঠিকানায় ফাইলটি পাঠানো
+                const response = await fetch(SERVER_UPLOAD_URL, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                // ৫. সার্ভার থেকে আসা উত্তর দেখানো
+                if (response.ok) {
+                    messageDiv.textContent = 'Success: ' + result.message;
+                    messageDiv.style.color = 'green';
+                } else {
+                    messageDiv.textContent = 'Error: ' + result.error;
+                    messageDiv.style.color = 'red';
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+                messageDiv.textContent = 'Error: Could not connect to server.';
+                messageDiv.style.color = 'red';
+            }
+        });
+    </script>
+</body>
+</html>
