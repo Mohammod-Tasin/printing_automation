@@ -331,7 +331,7 @@ async function processPayment(gateway) {
     const formData = new FormData();
     const fileRanges = selectedFiles.map(item => {
       const from = item.from ? String(item.from) : '';
-      const to = item.to ? String(item.to) : '';
+      const to = item.to ? String(to) : '';
       return {
         name: item.file.name,
         from,
@@ -395,3 +395,5 @@ function showMessage(text, type) {
     }, 6000);
   }
 }
+
+// (এই ফাইলের শেষে কোনো অতিরিক্ত } নেই)
