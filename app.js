@@ -15,7 +15,7 @@ const colorTypeInputs = document.querySelectorAll('input[name="colorType"]');
 const costDisplay = document.getElementById('costDisplay');
 const totalCostSpan = document.getElementById('totalCost');
 const paymentSection = document.getElementById('paymentSection');
-const SERVER_UPLOAD_URL = 'http://192.168.0.168:5000/upload';
+const SERVER_UPLOAD_URL = 'https://jace-nonpuristic-carter.ngrok-free.dev';
 // For now we don't have a real payment gateway integrated.
 // Set SIMULATE_PAYMENT=true to always treat payments as successful (demo mode).
 const SIMULATE_PAYMENT = true;
