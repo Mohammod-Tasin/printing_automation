@@ -17,7 +17,7 @@ const totalCostSpan = document.getElementById('totalCost');
 const paymentSection = document.getElementById('paymentSection');
 
 // --- পরিবর্তন ১: এখানে আপনার নতুন ngrok লিংক বসাবেন ---
-const SERVER_UPLOAD_URL = 'https://jace-nonpuristic-carter.ngrok-free.dev/upload';
+const SERVER_UPLOAD_URL ='https://jace-nonpuristic-carter.ngrok-free.dev/upload';
 // -----------------------------------------------------
 
 // For now we don't have a real payment gateway integrated.
