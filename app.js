@@ -15,24 +15,31 @@ const colorTypeInputs = document.querySelectorAll('input[name="colorType"]');
 const costDisplay = document.getElementById('costDisplay');
 const totalCostSpan = document.getElementById('totalCost');
 const paymentSection = document.getElementById('paymentSection');
-const SERVER_UPLOAD_URL = 'https://jace-nonpuristic-carter.ngrok-free.dev/upload';// For now we don't have a real payment gateway integrated.
+
+// --- পরিবর্তন ১: এখানে আপনার নতুন ngrok লিংক বসাবেন ---
+const SERVER_UPLOAD_URL = 'https://jace-nonpuristic-carter.ngrok-free.dev';
+// -----------------------------------------------------
+
+// For now we don't have a real payment gateway integrated.
 // Set SIMULATE_PAYMENT=true to always treat payments as successful (demo mode).
 const SIMULATE_PAYMENT = false;
+
 let selectedFiles = [];
 let totalPages = 0;
+
 // The label has a for="fileInput" attribute — that's sufficient to open the file picker.
-// Removing the manual click trigger prevents potential double-click behavior in some browsers.
-// Append newly selected files to the existing selection so users can open the
-// file dialog multiple times and keep previously chosen files.
 fileInput.addEventListener('change', (e) => {
   if (!e.target.files) return;
   addFiles(e.target.files);
 });
+
 fileInputLabel.addEventListener('dragover', (e) => {
   e.preventDefault();
   fileInputLabel.classList.add('drag-over');
 });
+
 fileInputLabel.addEventListener('dragleave', () => fileInputLabel.classList.remove('drag-over'));
+
 fileInputLabel.addEventListener('drop', (e) => {
   e.preventDefault();
   fileInputLabel.classList.remove('drag-over');
@@ -48,7 +55,7 @@ function updateFilesList() {
     const itemDiv = document.createElement('div');
     itemDiv.className = 'file-item';
     const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
-    // compute detected and selected pages for display
+
     const pc = item.pageCount || null;
     const fromVal = item.from ? parseInt(item.from, 10) : null;
     const toVal = item.to ? parseInt(item.to, 10) : null;
@@ -60,10 +67,9 @@ function updateFilesList() {
         selectedCount = pc;
       }
     }
-    // Show filename and per-file info. For images we don't render From/To inputs.
+
     if (item.isImage) {
       itemDiv.innerHTML = `
-
               <div class="file-left">
                 <div class="file-name">${file.name} (${sizeMB} MB)</div>
                 <div style="font-size:0.9em; color:#444; display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
@@ -81,7 +87,6 @@ function updateFilesList() {
         `;
     } else {
       itemDiv.innerHTML = `
-
               <div class="file-left">
                 <div class="file-name">${file.name} (${sizeMB} MB)</div>
                 <div style="font-size:0.9em; color:#444; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
@@ -104,7 +109,7 @@ function updateFilesList() {
     }
     filesList.appendChild(itemDiv);
   });
-  // Attach listeners to per-file inputs
+
   filesList.querySelectorAll('.file-from').forEach(inp => {
     inp.addEventListener('change', (e) => {
       const idx = parseInt(e.target.dataset.index, 10);
@@ -118,7 +123,7 @@ function updateFilesList() {
     });
   });
 }
-// Called when user edits per-file From/To inputs
+
 function setFileRange(index, from, to) {
   const idx = parseInt(index, 10);
   const item = selectedFiles[idx];
@@ -127,7 +132,7 @@ function setFileRange(index, from, to) {
   item.to = to ? String(to) : '';
   updateCost();
 }
-// Merge new files into selectedFiles, avoid duplicates, and sync the hidden file input
+
 function addFiles(fileList) {
   const newFiles = Array.from(fileList);
   newFiles.forEach(f => {
@@ -143,13 +148,14 @@ function addFiles(fileList) {
       });
     }
   });
-  // Sync the actual input.files so other code relying on it will work
+
   const dataTransfer = new DataTransfer();
   selectedFiles.forEach(item => dataTransfer.items.add(item.file));
   fileInput.files = dataTransfer.files;
   updateFilesList();
   estimatePageCount();
 }
+
 window.removeFile = function(index) {
   selectedFiles.splice(index, 1);
   fileInput.value = '';
@@ -159,8 +165,7 @@ window.removeFile = function(index) {
   updateFilesList();
   estimatePageCount();
 };
-// Estimate page count more accurately: try to read actual page count for PDFs
-// using PDF.js. For non-PDF files we fall back to 1 page per file.
+
 async function estimatePageCount() {
   if (selectedFiles.length === 0) {
     totalPages = 0;
@@ -174,25 +179,21 @@ async function estimatePageCount() {
         const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
         if (isPdf && window.pdfjsLib) {
           const arrayBuffer = await file.arrayBuffer();
-          const pdf = await pdfjsLib.getDocument({
-            data: arrayBuffer
-          }).promise;
+          const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
           item.pageCount = pdf.numPages || 1;
           return;
         }
       } catch (err) {
         console.error('Failed to read PDF pages for', file.name, err);
       }
-      // Fallback: assume 1 page for non-pdf or on error
       item.pageCount = 1;
     }));
-    // After per-file pageCounts are filled, compute total based on per-file ranges
+
     totalPages = selectedFiles.reduce((sum, item) => {
       const pc = item.pageCount || 1;
       const from = item.from ? parseInt(item.from, 10) : null;
       const to = item.to ? parseInt(item.to, 10) : null;
       if (from && to && to >= from) {
-        // clamp to available pages
         const used = Math.max(0, Math.min(to, pc) - Math.max(from, 1) + 1);
         return sum + used;
       }
@@ -200,17 +201,16 @@ async function estimatePageCount() {
     }, 0);
   } catch (err) {
     console.error('Error estimating page counts:', err);
-    // On unexpected error, fallback to conservative estimate
     totalPages = selectedFiles.length;
   }
-  updateFilesList(); // show detected page counts
+  updateFilesList();
   updateCost();
 }
 
 function updateCost() {
   const colorType = document.querySelector('input[name="colorType"]:checked').value;
   const pricePerPage = colorType === 'bw' ? 2 : 3;
-  // Calculate pages based on per-file ranges (if provided) or full pageCount
+
   let pages = selectedFiles.reduce((sum, item) => {
     const pc = item.pageCount || 1;
     const from = item.from ? parseInt(item.from, 10) : null;
@@ -224,15 +224,14 @@ function updateCost() {
   pages = Math.max(pages, 0);
   const cost = pages * pricePerPage;
   totalCostSpan.textContent = cost;
-  // Update paymentPages display immediately
   document.getElementById('paymentPages').textContent = pages;
-  // Refresh file list so per-file Selected counts update live
   updateFilesList();
 }
+
 colorTypeInputs.forEach(input => {
   input.addEventListener('change', updateCost);
 });
-// per-file ranges handle page selection now; no global pageFrom/pageTo inputs
+
 clearBtn.addEventListener('click', () => {
   selectedFiles = [];
   fileInput.value = '';
@@ -242,6 +241,7 @@ clearBtn.addEventListener('click', () => {
   totalPages = 0;
   updateCost();
 });
+
 uploadForm.addEventListener('submit', async (event) => {
   event.preventDefault();
   if (selectedFiles.length === 0) {
@@ -249,7 +249,6 @@ uploadForm.addEventListener('submit', async (event) => {
     return;
   }
   const colorType = document.querySelector('input[name="colorType"]:checked').value;
-  // Ensure we have up-to-date per-file page counts and totals before showing payment
   await estimatePageCount();
   const totalCost = parseInt(totalCostSpan.textContent);
   paymentSection.classList.add('show');
@@ -260,7 +259,7 @@ uploadForm.addEventListener('submit', async (event) => {
   submitBtn.disabled = true;
   window.scrollTo(0, paymentSection.offsetTop - 100);
 });
-// Confirmation modal wiring: show modal first, then call processPayment on OK
+
 let pendingGateway = null;
 const confirmModal = document.getElementById('confirmModal');
 const confirmMessageEl = document.getElementById('confirmMessage');
@@ -287,10 +286,8 @@ function hideConfirm() {
 if (confirmOkBtn) {
   confirmOkBtn.addEventListener('click', () => {
     const gateway = pendingGateway;
-    // close modal first
     hideConfirm();
     if (gateway) {
-      // show a transient processing message, then start the real payment flow
       showMessage(`⏳ Processing payment via ${gateway}...`, 'info');
       processPayment(gateway);
     }
@@ -303,20 +300,17 @@ if (confirmCancelBtn) {
   });
 }
 
-// Wire payment buttons to open the confirmation modal instead of calling processPayment directly
 document.getElementById('stripeBtn').addEventListener('click', () => showConfirm(`Proceed with Stripe payment of ${totalCostSpan.textContent} Taka?`, 'Stripe'));
 document.getElementById('bkashBtn').addEventListener('click', () => showConfirm(`Proceed with bKash payment of ${totalCostSpan.textContent} Taka?`, 'bKash'));
 document.getElementById('nagadBtn').addEventListener('click', () => showConfirm(`Proceed with Nagad payment of ${totalCostSpan.textContent} Taka?`, 'Nagad'));
+
 async function processPayment(gateway) {
-  // Demo mode: simulate payment processing and always succeed when SIMULATE_PAYMENT is true.
   loading.classList.add('show');
   try {
     if (SIMULATE_PAYMENT) {
-      // small delay to make the UI feel real
       await new Promise(resolve => setTimeout(resolve, 1200));
       loading.classList.remove('show');
       showMessage(`✅ Payment successful via ${gateway}! Documents sent to printer.`, 'success');
-      // Clear selection and reset UI as on success
       selectedFiles = [];
       fileInput.value = '';
       filesList.innerHTML = '';
@@ -327,11 +321,10 @@ async function processPayment(gateway) {
       return;
     }
 
-    // If not simulating, fall back to the real upload flow (network POST)
     const formData = new FormData();
     const fileRanges = selectedFiles.map(item => {
       const from = item.from ? String(item.from) : '';
-      const to = item.to ? String(to) : '';
+      const to = item.to ? String(item.to) : '';
       return {
         name: item.file.name,
         from,
@@ -347,6 +340,7 @@ async function processPayment(gateway) {
     formData.append('colorType', document.querySelector('input[name="colorType"]:checked').value);
     formData.append('totalCost', totalCostSpan.textContent);
     formData.append('gateway', gateway);
+
     const response = await fetch(SERVER_UPLOAD_URL, {
       method: 'POST',
       body: formData
@@ -373,17 +367,15 @@ async function processPayment(gateway) {
     submitBtn.disabled = false;
   }
 }
-// Message timer so we can auto-hide transient messages and avoid overlapping timers
+
 let messageTimer = null;
 function showMessage(text, type) {
-  // clear previous timer
   if (messageTimer) {
     clearTimeout(messageTimer);
     messageTimer = null;
   }
   messageDiv.textContent = text;
   messageDiv.className = 'show ' + type;
-  // Auto-hide info and success messages after a short duration; keep errors until user acts
   if (type === 'info') {
     messageTimer = setTimeout(() => {
       messageDiv.className = '';
@@ -396,5 +388,3 @@ function showMessage(text, type) {
     }, 6000);
   }
 }
-
-// (এই ফাইলের শেষে কোনো অতিরিক্ত } নেই)
