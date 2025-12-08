@@ -5,33 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PrintHub - Automatic Document Printing</title>
     <link rel="stylesheet" href="styles.css">
-    <style>
-      /* নতুন কোয়ান্টিটি বাটনের স্টাইল */
-      .qty-controls {
-        display: flex;
-        align-items: center;
-        gap: 5px;
-        background: #fff;
-        padding: 2px 8px;
-        border-radius: 6px;
-        border: 1px solid #ddd;
-      }
-      .qty-btn {
-        width: 24px;
-        height: 24px;
-        border-radius: 50%;
-        border: none;
-        background: #667eea;
-        color: white;
-        font-weight: bold;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-      .qty-btn:hover { background: #5a6fd6; }
-      .qty-display { font-weight: bold; min-width: 20px; text-align: center; color: #333; }
-    </style>
   </head>
   <body>
     <div class="container">
@@ -43,9 +16,7 @@
         <form id="uploadForm">
           <label for="fileInput" class="file-input-label" id="fileInputLabel"> 📄 Click to upload or drag and drop </label>
           <input type="file" id="fileInput" multiple required accept=".pdf,.doc,.docx,.txt,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png">
-
           <div class="files-list" id="filesList"></div>
-
           <div class="options-section">
             <div class="option-group">
               <label>Print Type:</label>
@@ -66,16 +37,14 @@
                 </label>
               </div>
             </div>
+            <!-- Global page range removed — use per-file ranges above each file -->
           </div>
-
           <div class="cost-display" id="costDisplay"> Total Cost: <span id="totalCost">0</span> Taka </div>
-
           <div class="button-group">
             <button type="submit" id="submitBtn">🚀 Upload & Print</button>
             <button type="button" id="clearBtn">✕ Clear All</button>
           </div>
         </form>
-
         <div class="payment-section" id="paymentSection">
           <div class="payment-header">💳 Payment Summary</div>
           <div class="payment-details">
@@ -84,15 +53,11 @@
               <span class="detail-value" id="paymentFiles">0</span>
             </div>
             <div class="detail-row">
-              <span class="detail-label">📚 Total Copies:</span>
-              <span class="detail-value" id="paymentCopies">0</span>
-            </div>
-            <div class="detail-row">
               <span class="detail-label">🎨 Print Type:</span>
               <span class="detail-value" id="paymentType">Black & White</span>
             </div>
             <div class="detail-row">
-              <span class="detail-label">📄 Total Pages (x Copies):</span>
+              <span class="detail-label">📄 Total Pages:</span>
               <span class="detail-value" id="paymentPages">0</span>
             </div>
             <div class="detail-row">
@@ -106,13 +71,13 @@
             <button class="payment-btn" id="nagadBtn" type="button">📱 Nagad</button>
           </div>
         </div>
-
         <div class="loading" id="loading">
           <div class="spinner"></div>
           <p>Processing your order...</p>
         </div>
         <div id="message"></div>
 
+        <!-- Confirmation modal (inserted here so scripts can query it reliably) -->
         <div id="confirmModal" class="modal" role="dialog" aria-modal="true" aria-hidden="true">
           <div class="modal-content">
             <p id="confirmMessage">Are you sure you want to proceed with payment?</p>
